@@ -11,6 +11,16 @@ import ResultView from "./components/ResultView";
 import QuickActions from "./components/QuickActions";
 import SettingsPage from "./components/SettingsPage";
 import Toast from "./components/Toast";
+import {
+  setPassword as setAnalyticsPassword,
+  trackGenerate,
+  trackGenerateComplete,
+  trackCopy,
+  trackQuickAction,
+  trackVoiceStart,
+  trackVoiceEnd,
+  trackAICorrect,
+} from "@/lib/analytics";
 
 interface Version {
   id: number;
@@ -78,6 +88,7 @@ export default function Home() {
 
   // 密码提交
   const handlePasswordSubmit = () => {
+    setAnalyticsPassword(password);
     setAuthenticated(true);
   };
 
@@ -97,21 +108,24 @@ export default function Home() {
       }
       setInput(baseInputRef.current + transcript);
     };
-    recognition.onend = () => setIsRecording(false);
-    recognition.onerror = () => setIsRecording(false);
+    recognition.onend = () => { setIsRecording(false); trackVoiceEnd(); };
+    recognition.onerror = () => { setIsRecording(false); trackVoiceEnd(); };
     recognitionRef.current = recognition;
     recognition.start();
     setIsRecording(true);
+    trackVoiceStart();
   };
 
   const stopRecording = () => {
     recognitionRef.current?.stop();
     setIsRecording(false);
+    trackVoiceEnd();
   };
 
   // AI 修正
   const handleCorrect = async () => {
     if (!input.trim()) return;
+    trackAICorrect(input.trim().length);
     setCorrecting(true);
     setError("");
     try {
@@ -184,6 +198,7 @@ export default function Home() {
   // 生成
   const handleGenerate = async () => {
     if (!input.trim()) return;
+    trackGenerate(input.trim().length, isRecording);
     setLoading(true);
     setVersions([]);
     setError("");
@@ -193,9 +208,12 @@ export default function Home() {
       const id = ++versionIdRef.current;
       setVersions([{ id, text: "", label: "第 1 版" }]);
       setCurrentView("result");
+      let finalText = "";
       await streamFetch({ input: input.trim() }, (text) => {
+        finalText = text;
         setVersions([{ id, text, label: "第 1 版" }]);
       });
+      trackGenerateComplete(id, finalText, 0);
     } catch (e) {
       setError(e instanceof Error ? e.message : "网络错误，请检查网络后重试");
       setCurrentView("home");
@@ -208,6 +226,7 @@ export default function Home() {
     if (versions.length === 0) return;
     const latest = versions[0].text;
     if (!latest) return;
+    trackQuickAction(action);
     setLoading(true);
     setError("");
     abortRef.current = false;
@@ -236,6 +255,7 @@ export default function Home() {
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
+      trackCopy();
       setCopied(true);
       setToast("已复制，可直接发送家长");
       setTimeout(() => setCopied(false), 2500);
