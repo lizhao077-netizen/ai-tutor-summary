@@ -13,9 +13,9 @@ export default function Header({ onSettingsClick, showBack, onBack }: Props) {
         {showBack ? (
           <button
             onClick={onBack}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="inline-flex items-center gap-1 px-4 py-2 text-lg font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
           >
-            &larr; 返回
+            &larr; 返回首页
           </button>
         ) : (
           <>
