@@ -29,12 +29,15 @@ export default function Home() {
   const baseInputRef = useRef("");
 
   // 设置
-  const [showSettings, setShowSettings] = useState(false);
+  const [showWordBank, setShowWordBank] = useState(false);
+  const [showModelSettings, setShowModelSettings] = useState(false);
   const [studentNames, setStudentNames] = useState("");
   const [subjectTerms, setSubjectTerms] = useState("");
   const [correcting, setCorrecting] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
   const [userApiKey, setUserApiKey] = useState("");
+  const [apiBase, setApiBase] = useState("");
+  const [modelName, setModelName] = useState("");
 
   useEffect(() => {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -42,6 +45,8 @@ export default function Home() {
     setStudentNames(localStorage.getItem("studentNames") || "");
     setSubjectTerms(localStorage.getItem("subjectTerms") || "");
     setUserApiKey(localStorage.getItem("userApiKey") || "");
+    setApiBase(localStorage.getItem("apiBase") || "");
+    setModelName(localStorage.getItem("modelName") || "");
   }, []);
 
   const startRecording = () => {
@@ -89,6 +94,8 @@ export default function Home() {
           "Content-Type": "application/json",
           "x-access-password": password,
           ...(userApiKey ? { "x-user-api-key": userApiKey } : {}),
+          ...(apiBase ? { "x-api-base": apiBase } : {}),
+          ...(modelName ? { "x-model": modelName } : {}),
         },
         body: JSON.stringify({
           text: input.trim(),
@@ -122,6 +129,8 @@ export default function Home() {
         "Content-Type": "application/json",
         "x-access-password": password,
         ...(userApiKey ? { "x-user-api-key": userApiKey } : {}),
+        ...(apiBase ? { "x-api-base": apiBase } : {}),
+        ...(modelName ? { "x-model": modelName } : {}),
       },
       body: JSON.stringify(body),
     });
@@ -244,6 +253,16 @@ export default function Home() {
     localStorage.setItem("userApiKey", v);
   };
 
+  const saveApiBase = (v: string) => {
+    setApiBase(v);
+    localStorage.setItem("apiBase", v);
+  };
+
+  const saveModelName = (v: string) => {
+    setModelName(v);
+    localStorage.setItem("modelName", v);
+  };
+
   if (!authenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
@@ -282,20 +301,28 @@ export default function Home() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold">AI 课后总结助手</h1>
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => { setShowWordBank((v) => !v); setShowModelSettings(false); }}
+                className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${showWordBank ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"}`}
+              >
+                修正词库
+              </button>
+              {!studentNames && !subjectTerms && (
+                <span className="hidden sm:inline text-xs text-amber-500 animate-pulse">← 先配置姓名和术语</span>
+              )}
+            </div>
             <button
-              onClick={() => setShowSettings((v) => !v)}
-              className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${showSettings ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"}`}
+              onClick={() => { setShowModelSettings((v) => !v); setShowWordBank(false); }}
+              className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${showModelSettings ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"}`}
             >
-              ⚙ 设置
+              🔑 模型
             </button>
-            {!studentNames && !subjectTerms && (
-              <span className="hidden sm:inline text-xs text-amber-500 animate-pulse">← 先配置姓名和术语</span>
-            )}
           </div>
         </div>
 
-        {/* 设置面板 */}
-        {showSettings && (
+        {/* 修正词库面板 */}
+        {showWordBank && (
           <div className="mb-6 p-5 border border-gray-200 rounded-lg space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -321,9 +348,44 @@ export default function Home() {
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm"
               />
             </div>
-            <div className="border-t pt-4">
+            <p className="text-xs text-gray-400">
+              用于 AI 修正语音识别错误。设置一次，自动保存。
+            </p>
+          </div>
+        )}
+
+        {/* 模型配置面板 */}
+        {showModelSettings && (
+          <div className="mb-6 p-5 border border-gray-200 rounded-lg space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                预设模型
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  ["DeepSeek", "https://api.deepseek.com/v1", "deepseek-chat"],
+                  ["OpenAI", "https://api.openai.com/v1", "gpt-4o-mini"],
+                  ["智谱 GLM", "https://open.bigmodel.cn/api/paas/v4", "glm-4-flash"],
+                  ["通义千问", "https://dashscope.aliyuncs.com/compatible-mode/v1", "qwen-turbo"],
+                  ["Moonshot", "https://api.moonshot.cn/v1", "moonshot-v1-8k"],
+                ] as const).map(([label, url, m]) => (
+                  <button
+                    key={label}
+                    onClick={() => { saveApiBase(url); saveModelName(m); }}
+                    className={`text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                      apiBase === url && modelName === m
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                自备 DeepSeek 额度（可选）
+                API Key
               </label>
               <input
                 type="password"
@@ -333,15 +395,33 @@ export default function Home() {
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm"
               />
               <p className="text-xs text-gray-400 mt-1">
-                填入后使用你自己的 DeepSeek 账号，费用自行承担。留空则共享站点额度。
-                <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline ml-1">
-                  如何获取？免费注册 →
-                </a>
+                填入后使用你自己的额度，费用自行承担。留空则共享站点额度。
               </p>
             </div>
-            <p className="text-xs text-gray-400">
-              用于 AI 修正语音识别错误。设置一次，自动保存，下次打开无需重新填写。
-            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                API 地址
+              </label>
+              <input
+                type="text"
+                value={apiBase}
+                onChange={(e) => saveApiBase(e.target.value)}
+                placeholder="https://api.deepseek.com/v1"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                模型名称
+              </label>
+              <input
+                type="text"
+                value={modelName}
+                onChange={(e) => saveModelName(e.target.value)}
+                placeholder="deepseek-chat"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm font-mono"
+              />
+            </div>
           </div>
         )}
 
@@ -355,7 +435,7 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
               <div className="flex gap-1.5">
                 <span className="font-medium shrink-0">① 设置：</span>
-                <span>点右上角 ⚙ 填写学生名和学科术语</span>
+                <span>点右上角&ldquo;修正词库&rdquo;填写学生名和学科术语</span>
               </div>
               <div className="flex gap-1.5">
                 <span className="font-medium shrink-0">② 输入：</span>

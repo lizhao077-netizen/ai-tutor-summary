@@ -1,9 +1,11 @@
 import { checkIpRateLimit, checkDailyQuota } from "@/lib/ratelimit";
-import { createClient } from "@/lib/openai";
+import { createClient, DEFAULT_MODEL } from "@/lib/openai";
 
 export async function POST(req: Request) {
   const password = req.headers.get("x-access-password");
   const userKey = req.headers.get("x-user-api-key");
+  const apiBase = req.headers.get("x-api-base");
+  const model = req.headers.get("x-model") || DEFAULT_MODEL;
   if (password !== process.env.ACCESS_PASSWORD) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -47,8 +49,8 @@ export async function POST(req: Request) {
   userPrompt += `\n\n根据发音相似性修正，但不要改变原意和原有结构。只输出修正后的文本：\n\n${text}`;
 
   try {
-    const completion = await createClient(userKey).chat.completions.create({
-      model: "deepseek-chat",
+    const completion = await createClient(userKey, apiBase).chat.completions.create({
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
