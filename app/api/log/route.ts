@@ -33,7 +33,9 @@ export async function POST(req: Request) {
         .select("id")
         .single();
 
-      if (!error && data) {
+      if (error) {
+        console.error("Supabase insert error:", error);
+      } else if (data) {
         gid = (data as { id: number }).id;
       }
     }
