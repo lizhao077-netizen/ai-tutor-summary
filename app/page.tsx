@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface Version {
   id: number;
@@ -21,6 +21,49 @@ export default function Home() {
   const [error, setError] = useState("");
   const abortRef = useRef(false);
   const versionIdRef = useRef(0);
+
+  // 语音输入
+  const [isRecording, setIsRecording] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const baseInputRef = useRef("");
+
+  useEffect(() => {
+    const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (Ctor) setSpeechSupported(true);
+  }, []);
+
+  const startRecording = () => {
+    const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Ctor) return;
+
+    const recognition = new Ctor();
+    recognition.lang = "zh-CN";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    baseInputRef.current = input;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setInput(baseInputRef.current + transcript);
+    };
+
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = () => setIsRecording(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => {
+    recognitionRef.current?.stop();
+    setIsRecording(false);
+  };
 
   const handlePasswordSubmit = () => {
     setAuthenticated(true);
@@ -184,9 +227,23 @@ export default function Home() {
             rows={6}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-base"
           />
-          <p className="text-right text-xs text-gray-400 mt-1">
-            {input.length}/500
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            {speechSupported ? (
+              <button
+                type="button"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`flex items-center gap-1.5 text-xs transition-colors ${isRecording ? "text-red-500" : "text-gray-400 hover:text-gray-600"}`}
+              >
+                <span className={`inline-block w-2 h-2 rounded-full ${isRecording ? "bg-red-500 animate-pulse" : "bg-gray-300"}`} />
+                {isRecording ? "录音中，点击停止" : "语音输入"}
+              </button>
+            ) : (
+              <span />
+            )}
+            <p className="text-xs text-gray-400">
+              {input.length}/500
+            </p>
+          </div>
         </div>
 
         <button
