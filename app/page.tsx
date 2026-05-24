@@ -272,12 +272,17 @@ export default function Home() {
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold">AI 课后总结助手</h1>
-          <button
-            onClick={() => setShowSettings((v) => !v)}
-            className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${showSettings ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"}`}
-          >
-            ⚙ 设置
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowSettings((v) => !v)}
+              className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${showSettings ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"}`}
+            >
+              ⚙ 设置
+            </button>
+            {!studentNames && !subjectTerms && (
+              <span className="hidden sm:inline text-xs text-amber-500 animate-pulse">← 先配置姓名和术语</span>
+            )}
+          </div>
         </div>
 
         {/* 设置面板 */}
