@@ -33,6 +33,7 @@ export default function Home() {
   const [studentNames, setStudentNames] = useState("");
   const [subjectTerms, setSubjectTerms] = useState("");
   const [correcting, setCorrecting] = useState(false);
+  const [showGuide, setShowGuide] = useState(true);
 
   useEffect(() => {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -309,6 +310,34 @@ export default function Home() {
             <p className="text-xs text-gray-400">
               用于 AI 修正语音识别错误。设置一次，自动保存，下次打开无需重新填写。
             </p>
+          </div>
+        )}
+
+        {/* 使用指南 */}
+        {showGuide && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-blue-800">使用指南</span>
+              <button onClick={() => setShowGuide(false)} className="text-blue-400 hover:text-blue-600 text-xs">知道了 ✕</button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+              <div className="flex gap-1.5">
+                <span className="font-medium shrink-0">① 设置：</span>
+                <span>点右上角 ⚙ 填写学生名和学科术语</span>
+              </div>
+              <div className="flex gap-1.5">
+                <span className="font-medium shrink-0">② 输入：</span>
+                <span>语音或打字输入课堂情况，点 AI 修正纠错</span>
+              </div>
+              <div className="flex gap-1.5">
+                <span className="font-medium shrink-0">③ 生成：</span>
+                <span>点&ldquo;生成课后总结&rdquo;，流式显示专业反馈</span>
+              </div>
+              <div className="flex gap-1.5">
+                <span className="font-medium shrink-0">④ 迭代：</span>
+                <span>不满意可提修改意见，最多生成 5 个版本</span>
+              </div>
+            </div>
           </div>
         )}
 
