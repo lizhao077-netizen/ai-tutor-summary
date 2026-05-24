@@ -228,18 +228,15 @@ export default function Home() {
             className="w-full px-4 py-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-base"
           />
           <div className="flex items-center justify-between mt-1">
-            {speechSupported ? (
-              <button
-                type="button"
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`flex items-center gap-1.5 text-xs transition-colors ${isRecording ? "text-red-500" : "text-gray-400 hover:text-gray-600"}`}
-              >
-                <span className={`inline-block w-2 h-2 rounded-full ${isRecording ? "bg-red-500 animate-pulse" : "bg-gray-300"}`} />
-                {isRecording ? "录音中，点击停止" : "语音输入"}
-              </button>
-            ) : (
-              <span />
-            )}
+            <button
+              type="button"
+              onClick={speechSupported ? (isRecording ? stopRecording : startRecording) : undefined}
+              title={speechSupported ? "" : "语音输入需要 Chrome 或 Edge 浏览器"}
+              className={`flex items-center gap-1.5 text-xs transition-colors ${speechSupported ? (isRecording ? "text-red-500" : "text-gray-400 hover:text-gray-600") : "text-gray-300 cursor-not-allowed"}`}
+            >
+              <span className={`inline-block w-2 h-2 rounded-full ${speechSupported ? (isRecording ? "bg-red-500 animate-pulse" : "bg-gray-300") : "bg-gray-200"}`} />
+              {speechSupported ? (isRecording ? "录音中，点击停止" : "语音输入") : "语音输入（需 Chrome/Edge）"}
+            </button>
             <p className="text-xs text-gray-400">
               {input.length}/500
             </p>
