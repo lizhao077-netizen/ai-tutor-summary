@@ -1,0 +1,27 @@
+"use client";
+
+interface Props {
+  value: string;
+  onChange: (v: string) => void;
+  maxLength: number;
+}
+
+export default function InputArea({ value, onChange, maxLength }: Props) {
+  return (
+    <div className="px-4">
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={
+          "例如：\n今天讲了圆周运动，\n基础概念理解不错，\n但向心力分析仍不稳定，\n解题时容易遗漏条件。"
+        }
+        maxLength={maxLength}
+        rows={8}
+        className="w-full min-h-[200px] px-5 py-4 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-300 text-base leading-relaxed"
+      />
+      <p className="text-right text-xs text-gray-300 mt-1.5">
+        {value.length}/{maxLength}
+      </p>
+    </div>
+  );
+}
