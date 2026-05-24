@@ -228,7 +228,15 @@ export default function Home() {
           </div>
         ))}
 
-        {versions.length > 0 && versions[0].text && !revisionLoading && (
+        {versions.length >= 5 && (
+          <div className="mt-6 border-t pt-4">
+            <p className="text-center text-sm text-gray-400">
+              已达到最多 5 个版本的上限
+            </p>
+          </div>
+        )}
+
+        {versions.length > 0 && versions[0].text && !revisionLoading && versions.length < 5 && (
           <div className="mt-6 border-t pt-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               修改意见
