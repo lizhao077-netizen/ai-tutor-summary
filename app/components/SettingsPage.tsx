@@ -46,7 +46,7 @@ export default function SettingsPage({
       <div className="px-4">
         <button
           onClick={onBack}
-          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          className="inline-flex items-center gap-1 px-3 py-2 text-base text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
         >
           &larr; 返回首页
         </button>
