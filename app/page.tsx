@@ -323,19 +323,19 @@ export default function Home() {
             </div>
             <div className="border-t pt-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                自己的 DeepSeek API Key
+                自备 DeepSeek 额度（可选）
               </label>
               <input
                 type="password"
                 value={userApiKey}
                 onChange={(e) => saveUserApiKey(e.target.value)}
-                placeholder="sk-xxxxxxxxxxxxxxxx"
+                placeholder="粘贴你的 API Key"
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm"
               />
               <p className="text-xs text-gray-400 mt-1">
-                留空则使用站点默认 Key。不知道什么是 Key？
+                填入后使用你自己的 DeepSeek 账号，费用自行承担。留空则共享站点额度。
                 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline ml-1">
-                  点击这里免费获取 →
+                  如何获取？免费注册 →
                 </a>
               </p>
             </div>
