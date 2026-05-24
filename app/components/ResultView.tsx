@@ -46,15 +46,13 @@ export default function ResultView({ text, loading, copied, onCopy }: Props) {
         {text && (
           <button
             onClick={onCopy}
-            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl transition-all ${
+              copied
+                ? "bg-green-600 text-white"
+                : "bg-gray-900 text-white hover:bg-gray-800 active:scale-[0.98]"
+            }`}
           >
-            {copied ? (
-              <span className="text-green-600">已复制 &check;</span>
-            ) : (
-              <>
-                <span>复制</span>
-              </>
-            )}
+            {copied ? "已复制 ✓" : "📋 一键复制"}
           </button>
         )}
       </div>

@@ -198,22 +198,22 @@ export default function Home() {
   // 生成
   const handleGenerate = async () => {
     if (!input.trim()) return;
-    trackGenerate(input.trim().length, isRecording);
     setLoading(true);
     setVersions([]);
     setError("");
     setCopied(false);
     abortRef.current = false;
+    trackGenerate(input.trim().length, isRecording); // async but no need to await before generating
     try {
-      const id = ++versionIdRef.current;
-      setVersions([{ id, text: "", label: "第 1 版" }]);
+      const localId = ++versionIdRef.current;
+      setVersions([{ id: localId, text: "", label: "第 1 版" }]);
       setCurrentView("result");
       let finalText = "";
       await streamFetch({ input: input.trim() }, (text) => {
         finalText = text;
-        setVersions([{ id, text, label: "第 1 版" }]);
+        setVersions([{ id: localId, text, label: "第 1 版" }]);
       });
-      trackGenerateComplete(id, finalText, 0);
+      trackGenerateComplete(finalText, 0);
     } catch (e) {
       setError(e instanceof Error ? e.message : "网络错误，请检查网络后重试");
       setCurrentView("home");
