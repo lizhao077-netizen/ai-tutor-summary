@@ -2,91 +2,139 @@
 
 import { useState, useRef } from "react";
 
+interface Version {
+  id: number;
+  text: string;
+  label: string;
+}
+
 export default function Home() {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
+  const [versions, setVersions] = useState<Version[]>([]);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [revision, setRevision] = useState("");
+  const [revisionLoading, setRevisionLoading] = useState(false);
+  const [copied, setCopied] = useState<number | null>(null);
   const [error, setError] = useState("");
   const abortRef = useRef(false);
+  const versionIdRef = useRef(0);
 
   const handlePasswordSubmit = () => {
     setAuthenticated(true);
   };
 
+  const streamFetch = async (body: Record<string, string>, onChunk: (text: string) => void) => {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-access-password": password,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg || "请求失败");
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) throw new Error("浏览器不支持流式读取");
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let text = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done || abortRef.current) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith("data: ")) continue;
+        const data = trimmed.slice(6);
+        if (data === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(data);
+          text += parsed.content;
+          onChunk(text);
+        } catch {
+          // ignore parse errors
+        }
+      }
+    }
+
+    return text;
+  };
+
   const handleGenerate = async () => {
     if (!input.trim()) return;
     setLoading(true);
-    setOutput("");
+    setVersions([]);
     setError("");
-    setCopied(false);
+    setCopied(null);
+    setRevision("");
     abortRef.current = false;
 
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-access-password": password,
-        },
-        body: JSON.stringify({ input: input.trim() }),
+      const id = ++versionIdRef.current;
+      setVersions([{ id, text: "", label: "第 1 版" }]);
+
+      await streamFetch({ input: input.trim() }, (text) => {
+        setVersions([{ id, text, label: "第 1 版" }]);
       });
-
-      if (!res.ok) {
-        const msg = await res.text();
-        setError(msg || "请求失败");
-        setLoading(false);
-        return;
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) {
-        setError("浏览器不支持流式读取");
-        setLoading(false);
-        return;
-      }
-
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done || abortRef.current) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith("data: ")) continue;
-          const data = trimmed.slice(6);
-          if (data === "[DONE]") continue;
-          try {
-            const parsed = JSON.parse(data);
-            setOutput((prev) => prev + parsed.content);
-          } catch {
-            // ignore parse errors
-          }
-        }
-      }
-    } catch {
-      setError("网络错误，请检查网络后重试");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "网络错误，请检查网络后重试");
     }
 
     setLoading(false);
   };
 
-  const handleCopy = async () => {
+  const handleRevise = async () => {
+    if (!revision.trim() || versions.length === 0) return;
+    const latest = versions[0].text;
+    if (!latest) return;
+
+    setRevisionLoading(true);
+    setError("");
+    abortRef.current = false;
+
     try {
-      await navigator.clipboard.writeText(output);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      const id = ++versionIdRef.current;
+      const label = `第 ${versions.length + 1} 版`;
+      setVersions((prev) => [{ id, text: "", label }, ...prev]);
+
+      await streamFetch(
+        { input: input.trim(), previousOutput: latest, revision: revision.trim() },
+        (text) => {
+          setVersions((prev) => {
+            const rest = prev.slice(1);
+            return [{ id, text, label }, ...rest];
+          });
+        },
+      );
+      setRevision("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "网络错误，请检查网络后重试");
+    }
+
+    setRevisionLoading(false);
+  };
+
+  const handleCopy = async (text: string, id: number) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(id);
+      setTimeout(() => setCopied(null), 2000);
     } catch {
-      setCopied(false);
+      // ignore
     }
   };
 
@@ -127,7 +175,7 @@ export default function Home() {
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
         <h1 className="text-2xl font-bold text-center mb-8">AI 课后总结助手</h1>
 
-        <div className="mb-6">
+        <div className="mb-4">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -155,23 +203,65 @@ export default function Home() {
           </div>
         )}
 
-        {(output || loading) && (
-          <div className="mt-6">
-            <div className="p-6 bg-gray-50 rounded-lg whitespace-pre-wrap text-base leading-relaxed min-h-[120px]">
-              {output}
-              {loading && (
-                <span className="inline-block w-1 h-4 bg-gray-900 ml-0.5 animate-pulse align-middle" />
+        {versions.map((v, i) => (
+          <div key={v.id} className={i === 0 ? "mt-6" : "mt-4"}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-xs font-medium px-2 py-0.5 rounded ${i === 0 ? "bg-gray-900 text-white" : "bg-gray-200 text-gray-500"}`}>
+                {v.label}
+              </span>
+              {v.text && (
+                <button
+                  onClick={() => handleCopy(v.text, v.id)}
+                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {copied === v.id ? "已复制 ✓" : "复制此版本"}
+                </button>
               )}
             </div>
 
-            {output && (
-              <button
-                onClick={handleCopy}
-                className="mt-4 w-full py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-              >
-                {copied ? "已复制 ✓" : "复制到剪贴板"}
-              </button>
-            )}
+            <div className={`p-6 rounded-lg whitespace-pre-wrap text-base leading-relaxed min-h-[80px] ${i === 0 ? "bg-gray-50" : "bg-gray-50/50 text-gray-500 text-sm"}`}>
+              {v.text}
+              {((i === 0 && loading) || (i === 0 && revisionLoading)) && (
+                <span className="inline-block w-1 h-4 bg-gray-900 ml-0.5 animate-pulse align-middle" />
+              )}
+            </div>
+          </div>
+        ))}
+
+        {versions.length > 0 && versions[0].text && !revisionLoading && (
+          <div className="mt-6 border-t pt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              修改意见
+            </label>
+            <textarea
+              value={revision}
+              onChange={(e) => setRevision(e.target.value)}
+              placeholder="例如：语气再亲切一点、不用结构，用一段话的形式、再简短一些…"
+              maxLength={200}
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm"
+            />
+            <p className="text-right text-xs text-gray-400 mt-1">
+              {revision.length}/200
+            </p>
+            <button
+              onClick={handleRevise}
+              disabled={revisionLoading || !revision.trim()}
+              className="w-full mt-3 py-2.5 border border-gray-900 text-gray-900 rounded-lg hover:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+            >
+              {revisionLoading ? "正在修改..." : "提交修改意见"}
+            </button>
+          </div>
+        )}
+
+        {revisionLoading && (
+          <div className="mt-6 border-t pt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              修改意见
+            </label>
+            <div className="w-full px-4 py-3 border border-gray-100 rounded-lg bg-gray-50 text-gray-400 text-sm">
+              正在生成修改后的版本...
+            </div>
           </div>
         )}
       </div>
