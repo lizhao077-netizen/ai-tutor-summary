@@ -28,9 +28,17 @@ export default function Home() {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const baseInputRef = useRef("");
 
+  // 设置
+  const [showSettings, setShowSettings] = useState(false);
+  const [studentNames, setStudentNames] = useState("");
+  const [subjectTerms, setSubjectTerms] = useState("");
+  const [correcting, setCorrecting] = useState(false);
+
   useEffect(() => {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Ctor) setSpeechSupported(true);
+    setStudentNames(localStorage.getItem("studentNames") || "");
+    setSubjectTerms(localStorage.getItem("subjectTerms") || "");
   }, []);
 
   const startRecording = () => {
@@ -63,6 +71,40 @@ export default function Home() {
   const stopRecording = () => {
     recognitionRef.current?.stop();
     setIsRecording(false);
+  };
+
+  // AI 修正语音识别文本
+  const handleCorrect = async () => {
+    if (!input.trim()) return;
+    setCorrecting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/correct", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-access-password": password,
+        },
+        body: JSON.stringify({
+          text: input.trim(),
+          names: studentNames,
+          terms: subjectTerms,
+        }),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || "修正失败");
+      }
+
+      const data = await res.json();
+      setInput(data.text);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "修正失败，请重试");
+    }
+
+    setCorrecting(false);
   };
 
   const handlePasswordSubmit = () => {
@@ -181,6 +223,17 @@ export default function Home() {
     }
   };
 
+  // localStorage 持久化设置
+  const saveStudentNames = (v: string) => {
+    setStudentNames(v);
+    localStorage.setItem("studentNames", v);
+  };
+
+  const saveSubjectTerms = (v: string) => {
+    setSubjectTerms(v);
+    localStorage.setItem("subjectTerms", v);
+  };
+
   if (!authenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
@@ -216,7 +269,48 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
-        <h1 className="text-2xl font-bold text-center mb-8">AI 课后总结助手</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold">AI 课后总结助手</h1>
+          <button
+            onClick={() => setShowSettings((v) => !v)}
+            className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${showSettings ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"}`}
+          >
+            ⚙ 设置
+          </button>
+        </div>
+
+        {/* 设置面板 */}
+        {showSettings && (
+          <div className="mb-6 p-5 border border-gray-200 rounded-lg space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                学生姓名（每行一个）
+              </label>
+              <textarea
+                value={studentNames}
+                onChange={(e) => saveStudentNames(e.target.value)}
+                placeholder={"小明\n小红"}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                学科术语（每行一个）
+              </label>
+              <textarea
+                value={subjectTerms}
+                onChange={(e) => saveSubjectTerms(e.target.value)}
+                placeholder={"二次函数\n顶点式\n判别式\n抛物线"}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-400">
+              用于 AI 修正语音识别错误。设置一次，自动保存，下次打开无需重新填写。
+            </p>
+          </div>
+        )}
 
         <div className="mb-4">
           <textarea
@@ -228,15 +322,28 @@ export default function Home() {
             className="w-full px-4 py-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-base"
           />
           <div className="flex items-center justify-between mt-1">
-            <button
-              type="button"
-              onClick={speechSupported ? (isRecording ? stopRecording : startRecording) : undefined}
-              title={speechSupported ? "" : "语音输入需要 Chrome 或 Edge 浏览器"}
-              className={`flex items-center gap-1.5 text-xs transition-colors ${speechSupported ? (isRecording ? "text-red-500" : "text-gray-400 hover:text-gray-600") : "text-gray-300 cursor-not-allowed"}`}
-            >
-              <span className={`inline-block w-2 h-2 rounded-full ${speechSupported ? (isRecording ? "bg-red-500 animate-pulse" : "bg-gray-300") : "bg-gray-200"}`} />
-              {speechSupported ? (isRecording ? "录音中，点击停止" : "语音输入") : "语音输入（需 Chrome/Edge）"}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={speechSupported ? (isRecording ? stopRecording : startRecording) : undefined}
+                title={speechSupported ? "" : "语音输入需要 Chrome 或 Edge 浏览器"}
+                className={`flex items-center gap-1.5 text-xs transition-colors ${speechSupported ? (isRecording ? "text-red-500" : "text-gray-400 hover:text-gray-600") : "text-gray-300 cursor-not-allowed"}`}
+              >
+                <span className={`inline-block w-2 h-2 rounded-full ${speechSupported ? (isRecording ? "bg-red-500 animate-pulse" : "bg-gray-300") : "bg-gray-200"}`} />
+                {speechSupported ? (isRecording ? "录音中，点击停止" : "语音输入") : "语音输入（需 Chrome/Edge）"}
+              </button>
+              {input.trim() && (
+                <button
+                  type="button"
+                  onClick={handleCorrect}
+                  disabled={correcting}
+                  className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors disabled:text-gray-300"
+                >
+                  <span className={`inline-block w-2 h-2 rounded-full ${correcting ? "bg-yellow-400 animate-pulse" : "bg-gray-300"}`} />
+                  {correcting ? "修正中..." : "AI 修正"}
+                </button>
+              )}
+            </div>
             <p className="text-xs text-gray-400">
               {input.length}/500
             </p>
