@@ -34,12 +34,14 @@ export default function Home() {
   const [subjectTerms, setSubjectTerms] = useState("");
   const [correcting, setCorrecting] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
+  const [userApiKey, setUserApiKey] = useState("");
 
   useEffect(() => {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Ctor) setSpeechSupported(true);
     setStudentNames(localStorage.getItem("studentNames") || "");
     setSubjectTerms(localStorage.getItem("subjectTerms") || "");
+    setUserApiKey(localStorage.getItem("userApiKey") || "");
   }, []);
 
   const startRecording = () => {
@@ -86,6 +88,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
           "x-access-password": password,
+          ...(userApiKey ? { "x-user-api-key": userApiKey } : {}),
         },
         body: JSON.stringify({
           text: input.trim(),
@@ -118,6 +121,7 @@ export default function Home() {
       headers: {
         "Content-Type": "application/json",
         "x-access-password": password,
+        ...(userApiKey ? { "x-user-api-key": userApiKey } : {}),
       },
       body: JSON.stringify(body),
     });
@@ -235,6 +239,11 @@ export default function Home() {
     localStorage.setItem("subjectTerms", v);
   };
 
+  const saveUserApiKey = (v: string) => {
+    setUserApiKey(v);
+    localStorage.setItem("userApiKey", v);
+  };
+
   if (!authenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
@@ -311,6 +320,24 @@ export default function Home() {
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm"
               />
+            </div>
+            <div className="border-t pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                自己的 DeepSeek API Key
+              </label>
+              <input
+                type="password"
+                value={userApiKey}
+                onChange={(e) => saveUserApiKey(e.target.value)}
+                placeholder="sk-xxxxxxxxxxxxxxxx"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-400 text-sm"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                留空则使用站点默认 Key。不知道什么是 Key？
+                <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline ml-1">
+                  点击这里免费获取 →
+                </a>
+              </p>
             </div>
             <p className="text-xs text-gray-400">
               用于 AI 修正语音识别错误。设置一次，自动保存，下次打开无需重新填写。
