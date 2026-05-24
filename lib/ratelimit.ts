@@ -34,6 +34,11 @@ export function checkIpRateLimit(ip: string): {
   return { allowed: true };
 }
 
+export function resetDailyQuota() {
+  dailyTotal = 0;
+  dailyResetAt = nowMs() + 24 * 60 * 60 * 1000;
+}
+
 export function checkDailyQuota(): { allowed: boolean; message?: string } {
   const now = nowMs();
 
