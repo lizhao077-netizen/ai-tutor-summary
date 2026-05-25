@@ -57,9 +57,12 @@ export default function Home() {
   // Toast
   const [toast, setToast] = useState("");
 
+  // 学科检测
+  const [detectedSubject, setDetectedSubject] = useState("");
+  const detectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // 设置
   const [studentNames, setStudentNames] = useState("");
-  const [subjectTerms, setSubjectTerms] = useState("");
   const [userApiKey, setUserApiKey] = useState("");
   const [apiBase, setApiBase] = useState("");
   const [modelName, setModelName] = useState("");
@@ -69,15 +72,33 @@ export default function Home() {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Ctor) setSpeechSupported(true);
     setStudentNames(localStorage.getItem("studentNames") || "");
-    setSubjectTerms(localStorage.getItem("subjectTerms") || "");
     setUserApiKey(localStorage.getItem("userApiKey") || "");
     setApiBase(localStorage.getItem("apiBase") || "");
     setModelName(localStorage.getItem("modelName") || "");
   }, []);
 
+  // 学科自动检测
+  useEffect(() => {
+    if (input.trim().length < 3) { setDetectedSubject(""); return; }
+    if (detectTimer.current) clearTimeout(detectTimer.current);
+    detectTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/detect-subject", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: input.trim() }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setDetectedSubject(data.subject || "");
+        }
+      } catch { /* silent */ }
+    }, 800);
+    return () => { if (detectTimer.current) clearTimeout(detectTimer.current); };
+  }, [input]);
+
   // localStorage 持久化
   const saveStudentNames = (v: string) => { setStudentNames(v); localStorage.setItem("studentNames", v); };
-  const saveSubjectTerms = (v: string) => { setSubjectTerms(v); localStorage.setItem("subjectTerms", v); };
   const saveUserApiKey = (v: string) => { setUserApiKey(v); localStorage.setItem("userApiKey", v); };
   const saveApiBase = (v: string) => { setApiBase(v); localStorage.setItem("apiBase", v); };
   const saveModelName = (v: string) => { setModelName(v); localStorage.setItem("modelName", v); };
@@ -127,7 +148,7 @@ export default function Home() {
           ...(apiBase ? { "x-api-base": apiBase } : {}),
           ...(modelName ? { "x-model": modelName } : {}),
         },
-        body: JSON.stringify({ text: input.trim(), names: studentNames, terms: subjectTerms }),
+        body: JSON.stringify({ text: input.trim(), names: studentNames, subject: detectedSubject }),
       });
       if (!res.ok) {
         const msg = await res.text();
@@ -268,9 +289,7 @@ export default function Home() {
         <div className="max-w-2xl mx-auto">
           <SettingsPage
             studentNames={studentNames}
-            subjectTerms={subjectTerms}
             onStudentNamesChange={saveStudentNames}
-            onSubjectTermsChange={saveSubjectTerms}
             userApiKey={userApiKey}
             apiBase={apiBase}
             modelName={modelName}
@@ -311,6 +330,16 @@ export default function Home() {
               onNextClassChange={setNextClass}
             />
 
+            {/* 学科检测 */}
+            {detectedSubject && (
+              <div className="px-4 mt-2">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 border border-blue-100 rounded-full text-xs text-blue-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                  当前学科：{detectedSubject}
+                </span>
+              </div>
+            )}
+
             {/* 语音 + AI 修正按钮 */}
             <VoiceAIButtons
               isRecording={isRecording}
@@ -325,7 +354,6 @@ export default function Home() {
             {/* 术语增强 */}
             <SmartEnhanceBadge
               studentNames={studentNames}
-              subjectTerms={subjectTerms}
               onManageClick={() => setCurrentView("settings")}
             />
 

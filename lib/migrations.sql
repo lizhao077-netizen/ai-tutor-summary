@@ -37,6 +37,17 @@ CREATE INDEX IF NOT EXISTS idx_action_logs_created_at ON action_logs(created_at 
 -- 2026-05-25: action_logs 加 metadata 列，存储修改意见等扩展信息
 ALTER TABLE action_logs ADD COLUMN IF NOT EXISTS metadata JSONB;
 
+-- 表3: 学科术语（按学科分类）
+CREATE TABLE IF NOT EXISTS subject_terms (
+  id BIGSERIAL PRIMARY KEY,
+  subject TEXT NOT NULL,
+  terms TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE subject_terms ENABLE ROW LEVEL SECURITY;
+
 -- 开启 RLS 但允许 service_role 全权限
 ALTER TABLE generation_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE action_logs ENABLE ROW LEVEL SECURITY;

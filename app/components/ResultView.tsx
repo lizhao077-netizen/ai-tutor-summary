@@ -23,9 +23,12 @@ function parseSections(text: string): { label: string; content: string }[] {
     const start = matches[i].index! + matches[i][0].length;
     const end = i < matches.length - 1 ? matches[i + 1].index! : text.length;
     const content = text.slice(start, end).trim();
-    if (content) {
-      sections.push({ label, content });
+    if (!content) continue;
+    // 过滤 AI 偶尔生成的空/占位内容
+    if (label === "课后作业" || label === "下节课计划") {
+      if (content.length < 8 || /^(无|暂无|待定|未提供)$/.test(content)) continue;
     }
+    sections.push({ label, content });
   }
 
   return sections.length > 0 ? sections : [{ label: "", content: text }];

@@ -1,18 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface Subject {
+  id: number;
+  subject: string;
+  terms: string;
+}
 
 interface Props {
   studentNames: string;
-  subjectTerms: string;
   onManageClick: () => void;
 }
 
-export default function SmartEnhanceBadge({ studentNames, subjectTerms, onManageClick }: Props) {
+export default function SmartEnhanceBadge({ studentNames, onManageClick }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const hasConfig = !!(studentNames.trim() || subjectTerms.trim());
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+
+  useEffect(() => {
+    fetch("/api/subject-terms")
+      .then((r) => r.json())
+      .then((d) => setSubjects(d.subjects || []))
+      .catch(() => {});
+  }, []);
+
+  const totalTerms = subjects.reduce((acc, s) => acc + (s.terms ? s.terms.split("\n").filter(Boolean).length : 0), 0);
+  const hasConfig = !!(studentNames.trim() || totalTerms > 0);
   const nameList = studentNames.trim() ? studentNames.trim().split("\n").filter(Boolean) : [];
-  const termList = subjectTerms.trim() ? subjectTerms.trim().split("\n").filter(Boolean) : [];
 
   if (!hasConfig) {
     return (
@@ -52,16 +66,25 @@ export default function SmartEnhanceBadge({ studentNames, subjectTerms, onManage
               </div>
             </div>
           )}
-          {termList.length > 0 && (
+          {subjects.length > 0 && (
             <div>
-              <p className="text-xs text-gray-400 mb-1.5">理科术语</p>
-              <div className="flex flex-wrap gap-1.5">
-                {termList.map((term) => (
-                  <span key={term} className="px-2 py-0.5 bg-white border border-gray-200 rounded-md text-xs text-gray-600">
-                    {term}
-                  </span>
-                ))}
-              </div>
+              <p className="text-xs text-gray-400 mb-1.5">学科术语</p>
+              {subjects.map((s) => {
+                const terms = s.terms ? s.terms.split("\n").filter(Boolean) : [];
+                if (terms.length === 0) return null;
+                return (
+                  <div key={s.id} className="mb-2">
+                    <p className="text-xs text-gray-500 mb-0.5">{s.subject}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {terms.map((t) => (
+                        <span key={t} className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-xs text-gray-600">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
           <button

@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import SettingsPanel from "./SettingsPanel";
+import SubjectTermsManager from "./SubjectTermsManager";
 
 interface Props {
   studentNames: string;
-  subjectTerms: string;
   onStudentNamesChange: (v: string) => void;
-  onSubjectTermsChange: (v: string) => void;
   userApiKey: string;
   apiBase: string;
   modelName: string;
@@ -27,9 +26,7 @@ const MODEL_PRESETS = [
 
 export default function SettingsPage({
   studentNames,
-  subjectTerms,
   onStudentNamesChange,
-  onSubjectTermsChange,
   userApiKey,
   apiBase,
   modelName,
@@ -71,26 +68,12 @@ export default function SettingsPage({
         </div>
       </SettingsPanel>
 
-      {/* 智能识别增强 */}
+      {/* 学科术语 */}
       <SettingsPanel
         title="AI 智能识别增强"
-        description="让 AI 准确识别学科术语和知识点，提升语音修正准确率"
+        description="按学科分类管理术语，AI 将在语音修正时自动识别"
       >
-        <div>
-          <label className="block text-xs text-gray-400 mb-1.5">
-            理科术语（每行一个）
-          </label>
-          <textarea
-            value={subjectTerms}
-            onChange={(e) => onSubjectTermsChange(e.target.value)}
-            placeholder="二次函数&#10;顶点式&#10;判别式&#10;楞次定律&#10;洛伦兹力"
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-300 text-sm"
-          />
-          <p className="text-xs text-gray-300 mt-1.5">
-            设置后自动保存。AI 将在语音修正时优先识别这些术语。
-          </p>
-        </div>
+        <SubjectTermsManager />
       </SettingsPanel>
 
       {/* 风格偏好（占位） */}
