@@ -26,9 +26,9 @@ async function post(actionType: string, meta?: Record<string, unknown>) {
 }
 
 /** 生成开始时调用，返回服务端 generationId */
-export async function trackGenerate(inputLength: number, usedVoice: boolean): Promise<number> {
+export async function trackGenerate(inputText: string, inputLength: number, usedVoice: boolean): Promise<number> {
   _generationStart = Date.now();
-  const result = await post("generate", { inputLength, usedVoice });
+  const result = await post("generate", { inputText, inputLength, usedVoice });
   if (result && result.id) {
     _generationId = result.id;
     return result.id;
@@ -54,7 +54,7 @@ export function trackCopy() {
 }
 
 /** 快捷修改 */
-export function trackQuickAction(label: string) {
+export function trackQuickAction(label: string, revisionText?: string) {
   const map: Record<string, string> = {
     "加入鼓励": "add_encourage",
     "补充学习建议": "add_advice",
@@ -66,6 +66,7 @@ export function trackQuickAction(label: string) {
 
   const body: Record<string, unknown> = { actionType };
   if (_generationId) body.generationId = _generationId;
+  if (revisionText) body.metadata = { revisionText };
   fetch("/api/log", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

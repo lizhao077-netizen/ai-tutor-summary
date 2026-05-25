@@ -34,6 +34,9 @@ CREATE INDEX IF NOT EXISTS idx_action_logs_generation_id ON action_logs(generati
 CREATE INDEX IF NOT EXISTS idx_action_logs_action_type ON action_logs(action_type);
 CREATE INDEX IF NOT EXISTS idx_action_logs_created_at ON action_logs(created_at DESC);
 
+-- 2026-05-25: action_logs 加 metadata 列，存储修改意见等扩展信息
+ALTER TABLE action_logs ADD COLUMN IF NOT EXISTS metadata JSONB;
+
 -- 开启 RLS 但允许 service_role 全权限
 ALTER TABLE generation_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE action_logs ENABLE ROW LEVEL SECURITY;

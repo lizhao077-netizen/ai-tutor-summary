@@ -191,7 +191,7 @@ export default function Home() {
     setError("");
     setCopied(false);
     abortRef.current = false;
-    trackGenerate(input.trim().length, isRecording); // async but no need to await before generating
+    trackGenerate(input.trim(), input.trim().length, isRecording); // async but no need to await before generating
     try {
       const localId = ++versionIdRef.current;
       setVersions([{ id: localId, text: "", label: "第 1 版" }]);
@@ -214,7 +214,8 @@ export default function Home() {
     if (versions.length === 0) return;
     const latest = versions[0].text;
     if (!latest) return;
-    trackQuickAction(action);
+    trackQuickAction(action, action);
+    trackGenerate(input.trim(), input.trim().length, false);
     setLoading(true);
     setError("");
     abortRef.current = false;
@@ -222,15 +223,18 @@ export default function Home() {
       const id = ++versionIdRef.current;
       const label = `第 ${versions.length + 1} 版`;
       setVersions((prev) => [{ id, text: "", label }, ...prev]);
+      let finalText = "";
       await streamFetch(
         { input: input.trim(), previousOutput: latest, revision: `请${action}` },
         (text) => {
+          finalText = text;
           setVersions((prev) => {
             const rest = prev.slice(1);
             return [{ id, text, label }, ...rest];
           });
         },
       );
+      trackGenerateComplete(finalText, versions.length);
     } catch (e) {
       setError(e instanceof Error ? e.message : "网络错误，请检查网络后重试");
     }

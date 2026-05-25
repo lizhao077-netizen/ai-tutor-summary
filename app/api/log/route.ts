@@ -22,6 +22,7 @@ export async function POST(req: Request) {
       const { data, error } = await supabase
         .from("generation_logs")
         .insert({
+          input_text: (metadata.inputText as string) || "",
           input_length: (metadata.inputLength as number) || 0,
           used_voice: (metadata.usedVoice as boolean) || false,
         } as never)
@@ -60,17 +61,15 @@ export async function POST(req: Request) {
     }
 
     // 记录行为日志
-    if (gid) {
-      await supabase.from("action_logs").insert({
-        generation_id: gid,
-        action_type: actionType,
-      } as never);
-    } else {
-      // 无 generationId 的行为（如 voice_start, ai_correct）
-      await supabase.from("action_logs").insert({
-        action_type: actionType,
-      } as never);
+    const actionLogEntry: Record<string, unknown> = {
+      action_type: actionType,
+    };
+    if (gid) actionLogEntry.generation_id = gid;
+    if (metadata && Object.keys(metadata).length > 0) {
+      actionLogEntry.metadata = metadata;
     }
+
+    await supabase.from("action_logs").insert(actionLogEntry as never);
 
     return NextResponse.json({ id: gid, ok: true });
   } catch (e) {
