@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { SYSTEM_PROMPT } from "@/lib/prompt";
+import { SYSTEM_PROMPT, REVISION_PROMPT } from "@/lib/prompt";
 import { checkIpRateLimit, checkDailyQuota } from "@/lib/ratelimit";
 import { createClient, DEFAULT_MODEL } from "@/lib/openai";
 
@@ -17,11 +17,15 @@ export async function POST(req: Request) {
   let input: string;
   let revision: string | undefined;
   let previousOutput: string | undefined;
+  let homework: string | undefined;
+  let nextClass: string | undefined;
   try {
     const body = await req.json();
     input = body.input?.trim() ?? "";
     revision = body.revision?.trim();
     previousOutput = body.previousOutput?.trim();
+    homework = body.homework?.trim();
+    nextClass = body.nextClass?.trim();
   } catch {
     return new Response("Invalid JSON", { status: 400 });
   }
@@ -56,13 +60,20 @@ export async function POST(req: Request) {
       },
       {
         role: "user",
-        content: `请在以上课后反馈的基础上，根据以下修改意见重新生成一份完整的课后反馈：\n${revision}`,
+        content: `${REVISION_PROMPT}\n${revision}`,
       },
     ];
   } else {
+    let userContent = input;
+    if (homework) {
+      userContent += `\n\n课后作业：${homework}`;
+    }
+    if (nextClass) {
+      userContent += `\n\n下节课内容：${nextClass}`;
+    }
     messages = [
       { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: input },
+      { role: "user", content: userContent },
     ];
   }
 
@@ -70,7 +81,7 @@ export async function POST(req: Request) {
     const stream = await createClient(userKey, apiBase).chat.completions.create({
       model,
       messages,
-      max_tokens: 500,
+      max_tokens: 800,
       temperature: 0.7,
       stream: true,
     });

@@ -40,6 +40,8 @@ export default function Home() {
 
   // 输入
   const [input, setInput] = useState("");
+  const [homework, setHomework] = useState("");
+  const [nextClass, setNextClass] = useState("");
   const [versions, setVersions] = useState<Version[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -209,7 +211,7 @@ export default function Home() {
       setVersions([{ id: localId, text: "", label: "第 1 版" }]);
       setCurrentView("result");
       let finalText = "";
-      await streamFetch({ input: input.trim() }, (text) => {
+      await streamFetch({ input: input.trim(), homework: homework.trim(), nextClass: nextClass.trim() }, (text) => {
         finalText = text;
         setVersions([{ id: localId, text, label: "第 1 版" }]);
       });
@@ -320,7 +322,15 @@ export default function Home() {
         {currentView === "home" ? (
           <>
             {/* 输入区 */}
-            <InputArea value={input} onChange={setInput} maxLength={500} />
+            <InputArea
+              value={input}
+              onChange={setInput}
+              maxLength={500}
+              homework={homework}
+              onHomeworkChange={setHomework}
+              nextClass={nextClass}
+              onNextClassChange={setNextClass}
+            />
 
             {/* 语音 + AI 修正按钮 */}
             <VoiceAIButtons
