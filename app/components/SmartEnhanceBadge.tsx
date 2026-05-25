@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 
+const ALL_SUBJECTS = ["数学", "物理", "化学", "英语", "语文", "历史", "地理", "生物", "政治"];
+
 interface Subject {
   id: number;
   subject: string;
@@ -10,12 +12,14 @@ interface Subject {
 
 interface Props {
   studentNames: string;
+  detectedSubject: string;
   onManageClick: () => void;
 }
 
-export default function SmartEnhanceBadge({ studentNames, onManageClick }: Props) {
+export default function SmartEnhanceBadge({ studentNames, detectedSubject, onManageClick }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [current, setCurrent] = useState(detectedSubject || "数学");
 
   useEffect(() => {
     fetch("/api/subject-terms")
@@ -24,6 +28,14 @@ export default function SmartEnhanceBadge({ studentNames, onManageClick }: Props
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (detectedSubject && ALL_SUBJECTS.includes(detectedSubject)) {
+      setCurrent(detectedSubject);
+    }
+  }, [detectedSubject]);
+
+  const selected = subjects.find((s) => s.subject === current);
+  const terms = selected?.terms ? selected.terms.split("\n").filter(Boolean) : [];
   const totalTerms = subjects.reduce((acc, s) => acc + (s.terms ? s.terms.split("\n").filter(Boolean).length : 0), 0);
   const hasConfig = !!(studentNames.trim() || totalTerms > 0);
   const nameList = studentNames.trim() ? studentNames.trim().split("\n").filter(Boolean) : [];
@@ -66,27 +78,31 @@ export default function SmartEnhanceBadge({ studentNames, onManageClick }: Props
               </div>
             </div>
           )}
-          {subjects.length > 0 && (
-            <div>
-              <p className="text-xs text-gray-400 mb-1.5">学科术语</p>
-              {subjects.map((s) => {
-                const terms = s.terms ? s.terms.split("\n").filter(Boolean) : [];
-                if (terms.length === 0) return null;
-                return (
-                  <div key={s.id} className="mb-2">
-                    <p className="text-xs text-gray-500 mb-0.5">{s.subject}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {terms.map((t) => (
-                        <span key={t} className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-xs text-gray-600">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+
+          {/* 学科切换 */}
+          <div>
+            <select
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+              className="w-full py-1.5 px-2.5 border border-gray-200 rounded-lg text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-200 bg-white"
+            >
+              {ALL_SUBJECTS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* 当前学科术语 */}
+          {terms.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {terms.map((t) => (
+                <span key={t} className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-xs text-gray-600">
+                  {t}
+                </span>
+              ))}
             </div>
           )}
+
           <button
             onClick={(e) => { e.stopPropagation(); onManageClick(); }}
             className="text-xs text-gray-400 hover:text-gray-600 transition-colors"

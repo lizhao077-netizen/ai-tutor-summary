@@ -354,6 +354,7 @@ export default function Home() {
             {/* 术语增强 */}
             <SmartEnhanceBadge
               studentNames={studentNames}
+              detectedSubject={detectedSubject}
               onManageClick={() => setCurrentView("settings")}
             />
 
