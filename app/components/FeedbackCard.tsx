@@ -1,10 +1,10 @@
 "use client";
 
 const CARD_CONFIG: Record<string, { icon: string; label: string }> = {
-  "今日内容": { icon: "📖", label: "今日内容" },
+  "课堂内容": { icon: "📖", label: "课堂内容" },
   "课堂表现": { icon: "🌟", label: "课堂表现" },
-  "存在问题": { icon: "🎯", label: "存在问题" },
-  "后续建议": { icon: "💡", label: "后续建议" },
+  "课后作业": { icon: "📝", label: "课后作业" },
+  "下节课计划": { icon: "🔜", label: "下节课计划" },
 };
 
 interface Props {

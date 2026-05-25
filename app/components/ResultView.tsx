@@ -11,7 +11,7 @@ interface Props {
 
 function parseSections(text: string): { label: string; content: string }[] {
   const sections: { label: string; content: string }[] = [];
-  const regex = /【(今日内容|课堂表现|存在问题|后续建议)】/g;
+  const regex = /\*\*(课堂内容|课堂表现|课后作业|下节课计划)\*\*/g;
   const matches = Array.from(text.matchAll(regex));
 
   if (matches.length === 0) {
