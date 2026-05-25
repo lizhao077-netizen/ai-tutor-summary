@@ -43,3 +43,7 @@ next-env.d.ts
 
 # local tools
 reset-quota.bat
+
+# local-only docs
+CLAUDE.md
+README.md
