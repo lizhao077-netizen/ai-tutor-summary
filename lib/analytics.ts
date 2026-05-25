@@ -56,11 +56,11 @@ export function trackCopy() {
 /** 快捷修改 */
 export function trackQuickAction(label: string) {
   const map: Record<string, string> = {
-    "更亲切一点": "more_friendly",
-    "更专业一点": "more_professional",
-    "简短一些": "shorter",
-    "多鼓励一些": "more_encourage",
-    "更像真人": "more_human",
+    "加入鼓励": "add_encourage",
+    "补充学习建议": "add_advice",
+    "精简为短信版": "shorter",
+    "展开学科分析": "expand_analysis",
+    "语气更亲切": "warmer_tone",
   };
   const actionType = map[label] || label;
 

@@ -43,11 +43,11 @@ export async function GET() {
 
     // 快捷修改按钮统计（今日）
     const quickActions = [
-      "more_friendly",
-      "more_professional",
+      "add_encourage",
+      "add_advice",
       "shorter",
-      "more_encourage",
-      "more_human",
+      "expand_analysis",
+      "warmer_tone",
     ];
     const actionCounts: Record<string, number> = {};
     for (const action of quickActions) {

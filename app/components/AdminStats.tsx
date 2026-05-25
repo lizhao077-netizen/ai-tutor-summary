@@ -14,11 +14,16 @@ interface StatsData {
 }
 
 const ACTION_LABELS: Record<string, string> = {
-  more_friendly: "更亲切一点",
-  more_professional: "更专业一点",
-  shorter: "简短一些",
-  more_encourage: "多鼓励一些",
-  more_human: "更像真人",
+  add_encourage: "加入鼓励",
+  add_advice: "补充学习建议",
+  shorter: "精简为短信版",
+  expand_analysis: "展开学科分析",
+  warmer_tone: "语气更亲切",
+  // 兼容旧数据
+  more_friendly: "更亲切一点(旧)",
+  more_professional: "更专业一点(旧)",
+  more_encourage: "多鼓励一些(旧)",
+  more_human: "更像真人(旧)",
 };
 
 export default function AdminStats({ data }: { data: StatsData }) {
