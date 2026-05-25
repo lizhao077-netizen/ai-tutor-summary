@@ -1,5 +1,7 @@
 "use client";
 
+import { Copy, Check } from "lucide-react";
+import { Button } from "./ui/Button";
 import FeedbackCard from "./FeedbackCard";
 
 interface Props {
@@ -43,20 +45,28 @@ export default function ResultView({ text, loading, copied, onCopy }: Props) {
     <div className="px-4 pt-2 pb-24">
       {/* 顶部标题栏 */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-medium text-gray-800">
+        <h2 className="text-base font-medium">
           已生成课后反馈
         </h2>
         {text && (
-          <button
+          <Button
             onClick={onCopy}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl transition-all ${
-              copied
-                ? "bg-green-600 text-white"
-                : "bg-gray-900 text-white hover:bg-gray-800 active:scale-[0.98]"
-            }`}
+            variant={copied ? "secondary" : "default"}
+            size="sm"
+            className={copied ? "bg-green-600 text-white hover:bg-green-700" : ""}
           >
-            {copied ? "已复制 ✓" : "📋 一键复制"}
-          </button>
+            {copied ? (
+              <>
+                <Check className="h-4 w-4" />
+                已复制
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4" />
+                一键复制
+              </>
+            )}
+          </Button>
         )}
       </div>
 
@@ -72,14 +82,14 @@ export default function ResultView({ text, loading, copied, onCopy }: Props) {
           ))}
         </div>
       ) : loading ? (
-        <div className="bg-gray-50 rounded-xl p-8 text-center text-gray-300 text-sm">
+        <div className="rounded-xl p-8 text-center text-muted-foreground text-sm">
           正在生成...
         </div>
       ) : null}
 
       {loading && (
         <div className="flex justify-center mt-3">
-          <span className="inline-block w-2 h-4 bg-gray-900 animate-pulse rounded-sm" />
+          <span className="inline-block w-2 h-4 bg-primary animate-pulse rounded-sm" />
         </div>
       )}
     </div>

@@ -1,5 +1,8 @@
 "use client";
 
+import { Settings, ChevronLeft } from "lucide-react";
+import { Button } from "./ui/Button";
+
 interface Props {
   onSettingsClick: () => void;
   showBack?: boolean;
@@ -11,27 +14,26 @@ export default function Header({ onSettingsClick, showBack, onBack }: Props) {
     <header className="flex items-center justify-between px-4 py-4">
       <div>
         {showBack ? (
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-1 px-4 py-2 text-lg font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
-          >
-            &larr; 返回首页
-          </button>
+          <Button variant="secondary" size="lg" onClick={onBack}>
+            <ChevronLeft className="h-5 w-5" />
+            返回首页
+          </Button>
         ) : (
           <>
             <h1 className="text-xl font-bold">AI 课后总结助手</h1>
-            <p className="text-xs text-gray-400 mt-0.5">30 秒生成专业家长反馈</p>
+            <p className="text-xs text-muted-foreground mt-0.5">30 秒生成专业家长反馈</p>
           </>
         )}
       </div>
       {!showBack && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onSettingsClick}
-          className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors text-lg"
           aria-label="设置"
         >
-          &#9881;
-        </button>
+          <Settings className="h-5 w-5" />
+        </Button>
       )}
     </header>
   );

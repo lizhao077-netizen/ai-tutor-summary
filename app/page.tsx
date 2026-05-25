@@ -10,6 +10,9 @@ import ResultView from "./components/ResultView";
 import QuickActions from "./components/QuickActions";
 import SettingsPage from "./components/SettingsPage";
 import Toast from "./components/Toast";
+import { Badge } from "./components/ui/Badge";
+import { Card, CardContent } from "./components/ui/Card";
+import { Separator } from "./components/ui/Separator";
 import {
   trackGenerate,
   trackGenerateComplete,
@@ -319,37 +322,41 @@ export default function Home() {
 
         {currentView === "home" ? (
           <>
-            {/* 输入区 */}
-            <InputArea
-              value={input}
-              onChange={setInput}
-              maxLength={500}
-              homework={homework}
-              onHomeworkChange={setHomework}
-              nextClass={nextClass}
-              onNextClassChange={setNextClass}
-            />
-
-            {/* 学科检测 */}
-            {detectedSubject && (
-              <div className="px-4 mt-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 border border-blue-100 rounded-full text-xs text-blue-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                  当前学科：{detectedSubject}
-                </span>
+            {/* 输入卡片 */}
+            <Card className="mx-4 mt-2 shadow-none border-border/60">
+              <CardContent className="p-4 pb-0">
+                <InputArea
+                  value={input}
+                  onChange={setInput}
+                  maxLength={500}
+                  homework={homework}
+                  onHomeworkChange={setHomework}
+                  nextClass={nextClass}
+                  onNextClassChange={setNextClass}
+                />
+              </CardContent>
+              <Separator className="mt-3" />
+              <div className="flex items-center gap-0.5 px-2 py-1.5">
+                <VoiceAIButtons
+                  isRecording={isRecording}
+                  speechSupported={speechSupported}
+                  correcting={correcting}
+                  hasInput={!!input.trim()}
+                  onVoiceStart={startRecording}
+                  onVoiceStop={stopRecording}
+                  onCorrect={handleCorrect}
+                />
+                {detectedSubject && (
+                  <>
+                    <Separator orientation="vertical" className="h-3 mx-1" />
+                    <Badge variant="blue" className="gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                      {detectedSubject}
+                    </Badge>
+                  </>
+                )}
               </div>
-            )}
-
-            {/* 语音 + AI 修正按钮 */}
-            <VoiceAIButtons
-              isRecording={isRecording}
-              speechSupported={speechSupported}
-              correcting={correcting}
-              hasInput={!!input.trim()}
-              onVoiceStart={startRecording}
-              onVoiceStop={stopRecording}
-              onCorrect={handleCorrect}
-            />
+            </Card>
 
             {/* 术语增强 */}
             <SmartEnhanceBadge

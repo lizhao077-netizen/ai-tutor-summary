@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Textarea } from "./ui/Textarea";
 
 const ALL_SUBJECTS = ["数学", "物理", "化学", "英语", "语文", "历史", "地理", "生物", "政治"];
 
@@ -79,7 +80,7 @@ export default function SubjectTermsManager() {
   };
 
   if (loading) {
-    return <div className="text-sm text-gray-300">加载中...</div>;
+    return <div className="text-sm text-muted-foreground">加载中...</div>;
   }
 
   return (
@@ -88,7 +89,7 @@ export default function SubjectTermsManager() {
       <select
         value={current}
         onChange={(e) => setCurrent(e.target.value)}
-        className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-200"
+        className="w-full py-2 px-3 border border-input rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
       >
         {ALL_SUBJECTS.map((s) => (
           <option key={s} value={s}>{s}</option>
@@ -99,15 +100,14 @@ export default function SubjectTermsManager() {
       {selected && (
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs text-gray-400">{current}术语（每行一个）</label>
-            {saving && <span className="text-xs text-gray-300">已保存</span>}
+            <label className="text-xs text-muted-foreground">{current}术语（每行一个）</label>
+            {saving && <span className="text-xs text-muted-foreground">已保存</span>}
           </div>
-          <textarea
+          <Textarea
             value={selected.terms}
             onChange={(e) => handleTermsChange(e.target.value)}
             placeholder={`输入${current}相关术语，每行一个&#10;如：二次函数&#10;顶点式&#10;判别式`}
             rows={5}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-300 text-sm"
           />
         </div>
       )}

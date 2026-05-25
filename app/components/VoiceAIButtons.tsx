@@ -1,5 +1,8 @@
 "use client";
 
+import { Mic, MicOff, Wand2 } from "lucide-react";
+import { Button } from "./ui/Button";
+
 interface Props {
   isRecording: boolean;
   speechSupported: boolean;
@@ -20,42 +23,36 @@ export default function VoiceAIButtons({
   onCorrect,
 }: Props) {
   return (
-    <div className="px-4 mt-3 grid grid-cols-2 gap-3">
+    <>
       {/* 语音输入 */}
-      <button
+      <Button
         type="button"
+        variant={isRecording ? "destructive" : "ghost"}
+        size="sm"
         onClick={speechSupported ? (isRecording ? onVoiceStop : onVoiceStart) : undefined}
         disabled={!speechSupported}
-        className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
-          !speechSupported
-            ? "border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed"
-            : isRecording
-              ? "border-red-200 bg-red-50 text-red-600"
-              : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 active:scale-[0.98]"
-        }`}
+        className="gap-1.5"
       >
-        <span className={`w-2 h-2 rounded-full ${
-          !speechSupported ? "bg-gray-200" : isRecording ? "bg-red-500 animate-gentle-pulse" : "bg-gray-400"
-        }`} />
-        {speechSupported ? (isRecording ? "录音中，点击停止" : "语音输入") : "语音输入（需 Chrome）"}
-      </button>
+        {isRecording ? (
+          <MicOff className="h-3.5 w-3.5 animate-gentle-pulse" />
+        ) : (
+          <Mic className="h-3.5 w-3.5" />
+        )}
+        {isRecording ? "停止" : "语音"}
+      </Button>
 
-      {/* 术语一键替换 */}
-      <button
+      {/* AI 修正 */}
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         onClick={onCorrect}
         disabled={!hasInput || correcting}
-        className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
-          !hasInput || correcting
-            ? "border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed"
-            : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 active:scale-[0.98]"
-        }`}
+        className="gap-1.5"
       >
-        <span className={`w-2 h-2 rounded-full ${
-          correcting ? "bg-yellow-400 animate-gentle-pulse" : hasInput ? "bg-gray-400" : "bg-gray-200"
-        }`} />
-        {correcting ? "替换中..." : "术语一键替换"}
-      </button>
-    </div>
+        <Wand2 className={`h-3.5 w-3.5 ${correcting ? "animate-gentle-pulse" : ""}`} />
+        {correcting ? "修正中" : "修正"}
+      </Button>
+    </>
   );
 }

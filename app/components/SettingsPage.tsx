@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import SettingsPanel from "./SettingsPanel";
 import SubjectTermsManager from "./SubjectTermsManager";
+import { Input } from "./ui/Input";
+import { Textarea } from "./ui/Textarea";
+import { Button } from "./ui/Button";
 
 interface Props {
   studentNames: string;
@@ -41,12 +45,10 @@ export default function SettingsPage({
     <div className="pb-24 space-y-4">
       {/* 返回按钮 */}
       <div className="px-4">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-1 px-4 py-2 text-lg font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
-        >
-          &larr; 返回首页
-        </button>
+        <Button variant="secondary" size="lg" onClick={onBack}>
+          <ChevronLeft className="h-5 w-5" />
+          返回首页
+        </Button>
       </div>
 
       {/* 学生信息管理 */}
@@ -55,15 +57,14 @@ export default function SettingsPage({
         description="设置学生姓名，AI 将在语音修正时自动识别"
       >
         <div>
-          <label className="block text-xs text-gray-400 mb-1.5">
+          <label className="block text-xs text-muted-foreground mb-1.5">
             学生姓名（每行一个）
           </label>
-          <textarea
+          <Textarea
             value={studentNames}
             onChange={(e) => onStudentNamesChange(e.target.value)}
             placeholder="张三&#10;李四"
             rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-300 text-sm"
           />
         </div>
       </SettingsPanel>
@@ -83,12 +84,9 @@ export default function SettingsPage({
       >
         <div className="flex gap-2">
           {["专业", "亲切", "简洁"].map((style) => (
-            <button
-              key={style}
-              className="px-4 py-1.5 rounded-full border border-gray-200 text-sm text-gray-400"
-            >
+            <Button key={style} variant="outline" size="sm" className="rounded-full">
               {style}
-            </button>
+            </Button>
           ))}
         </div>
       </SettingsPanel>
@@ -98,7 +96,7 @@ export default function SettingsPage({
         title="历史记录"
         description="查看之前生成的课后反馈"
       >
-        <p className="text-sm text-gray-300">即将上线</p>
+        <p className="text-sm text-muted-foreground">即将上线</p>
       </SettingsPanel>
 
       {/* 高级设置 */}
@@ -106,67 +104,63 @@ export default function SettingsPage({
         title="高级设置"
         description="API 密钥、模型配置等。普通用户无需修改。"
       >
-        <button
+        <Button
+          variant="link"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
         >
           {showAdvanced ? "收起高级设置" : "展开高级设置"}
-        </button>
+        </Button>
 
         {showAdvanced && (
           <div className="space-y-3 mt-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">预设模型</label>
+              <label className="block text-xs text-muted-foreground mb-1">预设模型</label>
               <div className="flex flex-wrap gap-1.5">
                 {MODEL_PRESETS.map(([label, url, m]) => (
-                  <button
+                  <Button
                     key={label}
+                    variant={apiBase === url && modelName === m ? "default" : "outline"}
+                    size="sm"
                     onClick={() => { onApiBaseChange(url); onModelNameChange(m); }}
-                    className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${
-                      apiBase === url && modelName === m
-                        ? "border-gray-900 bg-gray-900 text-white"
-                        : "border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600"
-                    }`}
                   >
                     {label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">API Key</label>
-              <input
+              <label className="block text-xs text-muted-foreground mb-1">API Key</label>
+              <Input
                 type="password"
                 value={userApiKey}
                 onChange={(e) => onUserApiKeyChange(e.target.value)}
                 placeholder="粘贴你的 API Key"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-300 text-sm"
               />
-              <p className="text-xs text-gray-300 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 填入后使用你自己的额度。留空则共享站点额度。
               </p>
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">API 地址</label>
-              <input
+              <label className="block text-xs text-muted-foreground mb-1">API 地址</label>
+              <Input
                 type="text"
                 value={apiBase}
                 onChange={(e) => onApiBaseChange(e.target.value)}
                 placeholder="https://api.deepseek.com/v1"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-300 text-sm font-mono"
+                className="font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">模型名称</label>
-              <input
+              <label className="block text-xs text-muted-foreground mb-1">模型名称</label>
+              <Input
                 type="text"
                 value={modelName}
                 onChange={(e) => onModelNameChange(e.target.value)}
                 placeholder="deepseek-chat"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-300 text-sm font-mono"
+                className="font-mono"
               />
             </div>
           </div>

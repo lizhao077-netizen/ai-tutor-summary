@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "./ui/Button";
+import { Input } from "./ui/Input";
+import { Send } from "lucide-react";
 
 const QUICK_ACTIONS = [
   "加入鼓励",
@@ -26,21 +29,23 @@ export default function QuickActions({ onAction, loading }: Props) {
 
   return (
     <div className="px-4 pb-24">
-      <p className="text-xs text-gray-400 mb-2.5">快捷修改</p>
+      <p className="text-xs text-muted-foreground mb-2.5">快捷修改</p>
       <div className="flex flex-wrap gap-2">
         {QUICK_ACTIONS.map((action) => (
-          <button
+          <Button
             key={action}
+            variant="outline"
+            size="sm"
             onClick={() => onAction(action)}
             disabled={loading}
-            className="px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.97]"
+            className="rounded-full"
           >
             {action}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="mt-3 flex gap-2">
-        <input
+        <Input
           type="text"
           value={custom}
           onChange={(e) => setCustom(e.target.value)}
@@ -48,15 +53,15 @@ export default function QuickActions({ onAction, loading }: Props) {
           placeholder="输入自定义修改意见..."
           maxLength={80}
           disabled={loading}
-          className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 placeholder:text-gray-300 disabled:opacity-40"
         />
-        <button
+        <Button
           onClick={handleCustomSubmit}
           disabled={!custom.trim() || loading}
-          className="px-4 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-[0.97]"
+          size="default"
         >
+          <Send className="h-4 w-4" />
           修改
-        </button>
+        </Button>
       </div>
     </div>
   );

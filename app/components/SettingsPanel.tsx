@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "./ui/Card";
 
 interface Props {
   title: string;
@@ -12,13 +13,17 @@ interface Props {
 export default function SettingsPanel({ title, description, children, collapsed }: Props) {
   return (
     <section className="px-4">
-      <div className="bg-gray-50 rounded-xl p-5">
-        <h3 className="text-sm font-medium text-gray-800 mb-1">{title}</h3>
-        {description && (
-          <p className="text-xs text-gray-400 mb-4">{description}</p>
+      <Card className="bg-muted/50 border-0">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          {description && (
+            <CardDescription className="text-xs">{description}</CardDescription>
+          )}
+        </CardHeader>
+        {!collapsed && (
+          <CardContent className="space-y-3">{children}</CardContent>
         )}
-        {!collapsed && <div className="space-y-3">{children}</div>}
-      </div>
+      </Card>
     </section>
   );
 }

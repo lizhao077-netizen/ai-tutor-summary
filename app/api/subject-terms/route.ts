@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       // 按 ID 更新（含重命名）
       const { error } = await supabase
         .from("subject_terms")
-        .update({ subject: subject.trim(), terms: (terms || "").trim(), updated_at: new Date().toISOString() })
+        .update({ subject: subject.trim(), terms: (terms || "").trim(), updated_at: new Date().toISOString() } as never)
         .eq("id", id);
       if (error) throw error;
     } else {
@@ -42,13 +42,13 @@ export async function POST(req: Request) {
       if (existing) {
         const { error } = await supabase
           .from("subject_terms")
-          .update({ terms: (terms || "").trim(), updated_at: new Date().toISOString() })
+          .update({ terms: (terms || "").trim(), updated_at: new Date().toISOString() } as never)
           .eq("id", (existing as { id: number }).id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("subject_terms")
-          .insert({ subject: subject.trim(), terms: (terms || "").trim() });
+          .insert({ subject: subject.trim(), terms: (terms || "").trim() } as never);
         if (error) throw error;
       }
     }

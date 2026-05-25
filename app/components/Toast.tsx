@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 interface Props {
   message: string;
@@ -20,8 +21,10 @@ export default function Toast({ message, visible, onClose, duration = 2500 }: Pr
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-toast-in">
-      <div className="px-5 py-3 bg-gray-900 text-white text-sm rounded-xl shadow-lg whitespace-nowrap">
+    <div className={cn(
+      "fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-toast-in",
+    )}>
+      <div className="px-5 py-3 bg-primary text-primary-foreground text-sm rounded-xl shadow-lg whitespace-nowrap">
         {message}
       </div>
     </div>
