@@ -50,7 +50,7 @@ export default function AdminStats({ data }: { data: StatsData }) {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <StatCard label="平均生成耗时" value={`${(data.avgGenMs / 1000).toFixed(1)}s`} small />
         <StatCard label="语音使用" value={`${data.voiceCount} 次`} small />
-        <StatCard label="AI 润色使用" value={`${data.correctCount} 次`} small />
+        <StatCard label="术语一键替换使用" value={`${data.correctCount} 次`} small />
       </div>
 
       {/* 快捷修改排行 */}

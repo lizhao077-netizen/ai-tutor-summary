@@ -121,7 +121,7 @@ export function trackVoiceEnd(durationMs?: number) {
   }).catch(() => {});
 }
 
-/** AI 润色 */
+/** 术语一键替换 */
 export function trackAICorrect(inputLength: number) {
   if (!_password) return;
   fetch("/api/log", {

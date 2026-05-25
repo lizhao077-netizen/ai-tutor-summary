@@ -71,7 +71,7 @@ export async function GET(req: Request) {
       .gte("created_at", todayISO)
       .eq("action_type", "voice_start");
 
-    // AI 润色使用次数（今日）
+    // 术语一键替换使用次数（今日）
     const { count: correctCount } = await supabase
       .from("action_logs")
       .select("*", { count: "exact", head: true })

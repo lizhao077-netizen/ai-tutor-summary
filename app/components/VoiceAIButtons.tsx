@@ -40,7 +40,7 @@ export default function VoiceAIButtons({
         {speechSupported ? (isRecording ? "录音中，点击停止" : "语音输入") : "语音输入（需 Chrome）"}
       </button>
 
-      {/* AI 润色识别 */}
+      {/* 术语一键替换 */}
       <button
         type="button"
         onClick={onCorrect}
@@ -54,7 +54,7 @@ export default function VoiceAIButtons({
         <span className={`w-2 h-2 rounded-full ${
           correcting ? "bg-yellow-400 animate-gentle-pulse" : hasInput ? "bg-gray-400" : "bg-gray-200"
         }`} />
-        {correcting ? "修正中..." : "AI 润色识别"}
+        {correcting ? "替换中..." : "术语一键替换"}
       </button>
     </div>
   );
