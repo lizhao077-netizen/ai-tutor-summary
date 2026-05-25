@@ -6,13 +6,9 @@ import { createClient, DEFAULT_MODEL } from "@/lib/openai";
 const MAX_LENGTH = 500;
 
 export async function POST(req: Request) {
-  const password = req.headers.get("x-access-password");
   const userKey = req.headers.get("x-user-api-key");
   const apiBase = req.headers.get("x-api-base");
   const model = req.headers.get("x-model") || DEFAULT_MODEL;
-  if (password !== process.env.ACCESS_PASSWORD) {
-    return new Response("Unauthorized", { status: 401 });
-  }
 
   let input: string;
   let revision: string | undefined;

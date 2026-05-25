@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
-export async function GET(req: Request) {
-  const password = req.headers.get("x-access-password");
-  if (password !== process.env.ACCESS_PASSWORD) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
+export async function GET() {
   try {
     const supabase = getSupabaseAdmin();
 

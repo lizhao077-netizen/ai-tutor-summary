@@ -1,19 +1,13 @@
 "use client";
 
-let _password = "";
 let _generationId = 0;
 let _generationStart = 0;
-
-export function setPassword(pw: string) {
-  _password = pw;
-}
 
 export function getGenerationId() {
   return _generationId;
 }
 
 async function post(actionType: string, meta?: Record<string, unknown>) {
-  if (!_password) return null;
   const body: Record<string, unknown> = { actionType };
   if (_generationId) body.generationId = _generationId;
   if (meta) body.metadata = meta;
@@ -21,10 +15,7 @@ async function post(actionType: string, meta?: Record<string, unknown>) {
   try {
     const res = await fetch("/api/log", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-access-password": _password,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     if (!res.ok) return null;
@@ -53,16 +44,11 @@ export async function trackGenerateComplete(outputText: string, iterationCount: 
 
 /** 复制 */
 export function trackCopy() {
-  // fire-and-forget
-  if (!_password) return;
   const body: Record<string, unknown> = { actionType: "copy" };
   if (_generationId) body.generationId = _generationId;
   fetch("/api/log", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-access-password": _password,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   }).catch(() => {});
 }
@@ -78,42 +64,29 @@ export function trackQuickAction(label: string) {
   };
   const actionType = map[label] || label;
 
-  // fire-and-forget
-  if (!_password) return;
   const body: Record<string, unknown> = { actionType };
   if (_generationId) body.generationId = _generationId;
   fetch("/api/log", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-access-password": _password,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   }).catch(() => {});
 }
 
 /** 语音开始 */
 export function trackVoiceStart() {
-  if (!_password) return;
   fetch("/api/log", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-access-password": _password,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ actionType: "voice_start" }),
   }).catch(() => {});
 }
 
 /** 语音结束 */
 export function trackVoiceEnd(durationMs?: number) {
-  if (!_password) return;
   fetch("/api/log", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-access-password": _password,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       actionType: "voice_end",
       metadata: durationMs ? { durationMs } : undefined,
@@ -123,13 +96,9 @@ export function trackVoiceEnd(durationMs?: number) {
 
 /** 术语一键替换 */
 export function trackAICorrect(inputLength: number) {
-  if (!_password) return;
   fetch("/api/log", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-access-password": _password,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       actionType: "ai_correct",
       metadata: { inputLength },

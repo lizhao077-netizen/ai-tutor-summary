@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import PasswordGate from "./components/PasswordGate";
 import Header from "./components/Header";
 import InputArea from "./components/InputArea";
 import VoiceAIButtons from "./components/VoiceAIButtons";
@@ -12,7 +11,6 @@ import QuickActions from "./components/QuickActions";
 import SettingsPage from "./components/SettingsPage";
 import Toast from "./components/Toast";
 import {
-  setPassword as setAnalyticsPassword,
   trackGenerate,
   trackGenerateComplete,
   trackCopy,
@@ -31,10 +29,6 @@ interface Version {
 type View = "home" | "result" | "settings";
 
 export default function Home() {
-  // 认证
-  const [authenticated, setAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
-
   // 视图
   const [currentView, setCurrentView] = useState<View>("home");
 
@@ -88,12 +82,6 @@ export default function Home() {
   const saveApiBase = (v: string) => { setApiBase(v); localStorage.setItem("apiBase", v); };
   const saveModelName = (v: string) => { setModelName(v); localStorage.setItem("modelName", v); };
 
-  // 密码提交
-  const handlePasswordSubmit = () => {
-    setAnalyticsPassword(password);
-    setAuthenticated(true);
-  };
-
   // 语音
   const startRecording = () => {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -135,7 +123,6 @@ export default function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-access-password": password,
           ...(userApiKey ? { "x-user-api-key": userApiKey } : {}),
           ...(apiBase ? { "x-api-base": apiBase } : {}),
           ...(modelName ? { "x-model": modelName } : {}),
@@ -160,7 +147,6 @@ export default function Home() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-access-password": password,
         ...(userApiKey ? { "x-user-api-key": userApiKey } : {}),
         ...(apiBase ? { "x-api-base": apiBase } : {}),
         ...(modelName ? { "x-model": modelName } : {}),
@@ -270,17 +256,6 @@ export default function Home() {
     setCurrentView("home");
     setError("");
   };
-
-  // ==================== 密码门 ====================
-  if (!authenticated) {
-    return (
-      <PasswordGate
-        password={password}
-        onPasswordChange={(v) => { setPassword(v); }}
-        onSubmit={handlePasswordSubmit}
-      />
-    );
-  }
 
   // ==================== 设置页 ====================
   if (currentView === "settings") {
