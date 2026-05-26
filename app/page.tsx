@@ -50,6 +50,7 @@ export default function Home() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const baseInputRef = useRef("");
+  const manualStopRef = useRef(false);
 
   // 修正
   const [correcting, setCorrecting] = useState(false);
@@ -107,7 +108,8 @@ export default function Home() {
     const recognition = new Ctor();
     recognition.lang = "zh-CN";
     recognition.interimResults = true;
-    recognition.continuous = false;
+    recognition.continuous = true;
+    manualStopRef.current = false;
     baseInputRef.current = input;
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let transcript = "";
@@ -116,8 +118,23 @@ export default function Home() {
       }
       setInput(baseInputRef.current + transcript);
     };
-    recognition.onend = () => { setIsRecording(false); trackVoiceEnd(); };
-    recognition.onerror = () => { setIsRecording(false); trackVoiceEnd(); };
+    recognition.onend = () => {
+      if (manualStopRef.current) {
+        setIsRecording(false);
+        trackVoiceEnd();
+      } else {
+        // 自动结束后重启，持续监听
+        try { recognition.start(); } catch { setIsRecording(false); trackVoiceEnd(); }
+      }
+    };
+    recognition.onerror = () => {
+      if (manualStopRef.current) {
+        setIsRecording(false);
+        trackVoiceEnd();
+      } else {
+        try { recognition.start(); } catch { setIsRecording(false); trackVoiceEnd(); }
+      }
+    };
     recognitionRef.current = recognition;
     recognition.start();
     setIsRecording(true);
@@ -125,9 +142,8 @@ export default function Home() {
   };
 
   const stopRecording = () => {
+    manualStopRef.current = true;
     recognitionRef.current?.stop();
-    setIsRecording(false);
-    trackVoiceEnd();
   };
 
   // AI 修正
