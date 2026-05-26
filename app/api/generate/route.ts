@@ -15,6 +15,7 @@ export async function POST(req: Request) {
   let previousOutput: string | undefined;
   let homework: string | undefined;
   let nextClass: string | undefined;
+  let wordCount: string | undefined;
   try {
     const body = await req.json();
     input = body.input?.trim() ?? "";
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
     previousOutput = body.previousOutput?.trim();
     homework = body.homework?.trim();
     nextClass = body.nextClass?.trim();
+    wordCount = body.wordCount?.trim();
   } catch {
     return new Response("Invalid JSON", { status: 400 });
   }
@@ -41,11 +43,18 @@ export async function POST(req: Request) {
     return new Response(quotaCheck.message, { status: 429 });
   }
 
+  const systemPrompt = wordCount
+    ? SYSTEM_PROMPT.replace(
+        "根据课堂内容的丰富程度自适应，通常在 150~400 字之间。内容多就多写，内容少就简洁，不要刻意凑字或删减。",
+        `请将本次反馈控制在约 ${wordCount} 字左右，不需要非常精确，大致接近即可。`,
+      )
+    : SYSTEM_PROMPT;
+
   let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
 
   if (revision && previousOutput) {
     messages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
       {
         role: "user",
         content: `根据以下课堂情况生成了课后反馈：\n${input}`,
@@ -68,7 +77,7 @@ export async function POST(req: Request) {
       userContent += `\n\n下节课内容：${nextClass}`;
     }
     messages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
       { role: "user", content: userContent },
     ];
   }

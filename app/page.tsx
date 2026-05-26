@@ -66,18 +66,14 @@ export default function Home() {
 
   // 设置
   const [studentNames, setStudentNames] = useState("");
-  const [userApiKey, setUserApiKey] = useState("");
-  const [apiBase, setApiBase] = useState("");
-  const [modelName, setModelName] = useState("");
+  const [wordCount, setWordCount] = useState("");
 
   // 初始化
   useEffect(() => {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Ctor) setSpeechSupported(true);
     setStudentNames(localStorage.getItem("studentNames") || "");
-    setUserApiKey(localStorage.getItem("userApiKey") || "");
-    setApiBase(localStorage.getItem("apiBase") || "");
-    setModelName(localStorage.getItem("modelName") || "");
+    setWordCount(localStorage.getItem("wordCount") || "");
   }, []);
 
   // 学科自动检测
@@ -102,9 +98,7 @@ export default function Home() {
 
   // localStorage 持久化
   const saveStudentNames = (v: string) => { setStudentNames(v); localStorage.setItem("studentNames", v); };
-  const saveUserApiKey = (v: string) => { setUserApiKey(v); localStorage.setItem("userApiKey", v); };
-  const saveApiBase = (v: string) => { setApiBase(v); localStorage.setItem("apiBase", v); };
-  const saveModelName = (v: string) => { setModelName(v); localStorage.setItem("modelName", v); };
+  const saveWordCount = (v: string) => { setWordCount(v); localStorage.setItem("wordCount", v); };
 
   // 语音
   const startRecording = () => {
@@ -147,9 +141,6 @@ export default function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(userApiKey ? { "x-user-api-key": userApiKey } : {}),
-          ...(apiBase ? { "x-api-base": apiBase } : {}),
-          ...(modelName ? { "x-model": modelName } : {}),
         },
         body: JSON.stringify({ text: input.trim(), names: studentNames, subject: detectedSubject }),
       });
@@ -166,16 +157,13 @@ export default function Home() {
   };
 
   // 流式请求
-  const streamFetch = async (body: Record<string, string>, onChunk: (text: string) => void) => {
+  const streamFetch = async (body: Record<string, string>, onChunk: (text: string) => void, wordCount?: string) => {
     const res = await fetch("/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(userApiKey ? { "x-user-api-key": userApiKey } : {}),
-        ...(apiBase ? { "x-api-base": apiBase } : {}),
-        ...(modelName ? { "x-model": modelName } : {}),
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(wordCount ? { ...body, wordCount } : body),
     });
     if (!res.ok) {
       const msg = await res.text();
@@ -224,7 +212,7 @@ export default function Home() {
       await streamFetch({ input: input.trim(), homework: homework.trim(), nextClass: nextClass.trim() }, (text) => {
         finalText = text;
         setVersions([{ id: localId, text, label: "第 1 版" }]);
-      });
+      }, wordCount);
       trackGenerateComplete(finalText, 0);
     } catch (e) {
       setError(e instanceof Error ? e.message : "网络错误，请检查网络后重试");
@@ -257,6 +245,7 @@ export default function Home() {
             return [{ id, text, label }, ...rest];
           });
         },
+        wordCount,
       );
       trackGenerateComplete(finalText, versions.length);
     } catch (e) {
@@ -293,12 +282,6 @@ export default function Home() {
           <SettingsPage
             studentNames={studentNames}
             onStudentNamesChange={saveStudentNames}
-            userApiKey={userApiKey}
-            apiBase={apiBase}
-            modelName={modelName}
-            onUserApiKeyChange={saveUserApiKey}
-            onApiBaseChange={saveApiBase}
-            onModelNameChange={saveModelName}
             onBack={() => setCurrentView("home")}
           />
         </div>
@@ -364,6 +347,35 @@ export default function Home() {
               detectedSubject={detectedSubject}
               onManageClick={() => setCurrentView("settings")}
             />
+
+            {/* 字数设置 */}
+            <div className="px-4 mt-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground shrink-0">目标字数</span>
+                {["200", "300", "400", "500"].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => saveWordCount(wordCount === n ? "" : n)}
+                    className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                      wordCount === n
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-white text-muted-foreground border-border hover:border-gray-300"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  value={wordCount}
+                  onChange={(e) => saveWordCount(e.target.value)}
+                  placeholder="自定义"
+                  min={50}
+                  max={2000}
+                  className="w-16 h-7 text-xs border border-border rounded-lg px-2 py-0 text-center placeholder:text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            </div>
 
             {/* 错误提示 */}
             {error && (
