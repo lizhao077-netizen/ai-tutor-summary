@@ -47,9 +47,9 @@ export default function Home() {
 
   // 语音
   const [isRecording, setIsRecording] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const baseInputRef = useRef("");
+  const finalTextRef = useRef("");
   const manualStopRef = useRef(false);
 
   // 修正
@@ -71,8 +71,6 @@ export default function Home() {
 
   // 初始化
   useEffect(() => {
-    const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (Ctor) setSpeechSupported(true);
     setStudentNames(localStorage.getItem("studentNames") || "");
     setWordCount(localStorage.getItem("wordCount") || "");
   }, []);
@@ -102,48 +100,98 @@ export default function Home() {
   const saveWordCount = (v: string) => { setWordCount(v); localStorage.setItem("wordCount", v); };
 
   // 语音
-  const startRecording = () => {
+  const startRecognitionSession = (): boolean => {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Ctor) return;
+    if (!Ctor || manualStopRef.current) return false;
+
     const recognition = new Ctor();
     recognition.lang = "zh-CN";
     recognition.interimResults = true;
     recognition.continuous = true;
-    manualStopRef.current = false;
-    baseInputRef.current = input;
+
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let transcript = "";
+      let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+        const r = event.results[i];
+        if (r.isFinal) {
+          finalTextRef.current += r[0].transcript;
+        } else {
+          interim += r[0].transcript;
+        }
       }
-      setInput(baseInputRef.current + transcript);
+      setInput(baseInputRef.current + finalTextRef.current + interim);
     };
+
     recognition.onend = () => {
       if (manualStopRef.current) {
         setIsRecording(false);
         trackVoiceEnd();
+        recognitionRef.current = null;
       } else {
-        // 自动结束后重启，持续监听
-        try { recognition.start(); } catch { setIsRecording(false); trackVoiceEnd(); }
+        baseInputRef.current = baseInputRef.current + finalTextRef.current;
+        finalTextRef.current = "";
+        if (!startRecognitionSession()) {
+          setIsRecording(false);
+          trackVoiceEnd();
+          recognitionRef.current = null;
+          setToast("语音会话中断，请点击语音按钮重新开始");
+        }
       }
     };
-    recognition.onerror = () => {
-      if (manualStopRef.current) {
-        setIsRecording(false);
-        trackVoiceEnd();
-      } else {
-        try { recognition.start(); } catch { setIsRecording(false); trackVoiceEnd(); }
-      }
+
+    recognition.onerror = (event: Event) => {
+      const e = event as Event & { error?: string };
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      setIsRecording(false);
+      trackVoiceEnd();
+      recognitionRef.current = null;
+      setToast("语音识别出错，请重试");
     };
+
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
-    trackVoiceStart();
+    try {
+      recognition.start();
+      return true;
+    } catch {
+      recognitionRef.current = null;
+      return false;
+    }
+  };
+
+  const startRecording = () => {
+    const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Ctor) {
+      setToast("当前浏览器不支持语音输入");
+      return;
+    }
+
+    manualStopRef.current = false;
+    baseInputRef.current = input;
+    finalTextRef.current = "";
+
+    if (startRecognitionSession()) {
+      setIsRecording(true);
+      trackVoiceStart();
+    } else {
+      setToast("语音引擎加载中...");
+      setTimeout(() => {
+        if (manualStopRef.current) return;
+        if (startRecognitionSession()) {
+          setIsRecording(true);
+          trackVoiceStart();
+        } else {
+          setToast("语音启动失败，请稍后重试");
+        }
+      }, 1500);
+    }
   };
 
   const stopRecording = () => {
     manualStopRef.current = true;
-    recognitionRef.current?.stop();
+    setIsRecording(false);
+    trackVoiceEnd();
+    try { recognitionRef.current?.stop(); } catch { /* ignore */ }
+    recognitionRef.current = null;
   };
 
   // AI 修正
@@ -338,7 +386,6 @@ export default function Home() {
               <div className="flex items-center gap-0.5 px-2 py-1.5">
                 <VoiceAIButtons
                   isRecording={isRecording}
-                  speechSupported={speechSupported}
                   correcting={correcting}
                   hasInput={!!input.trim()}
                   onVoiceStart={startRecording}

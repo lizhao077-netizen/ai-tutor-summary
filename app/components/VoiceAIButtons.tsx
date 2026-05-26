@@ -5,7 +5,6 @@ import { Button } from "./ui/Button";
 
 interface Props {
   isRecording: boolean;
-  speechSupported: boolean;
   correcting: boolean;
   hasInput: boolean;
   onVoiceStart: () => void;
@@ -15,7 +14,6 @@ interface Props {
 
 export default function VoiceAIButtons({
   isRecording,
-  speechSupported,
   correcting,
   hasInput,
   onVoiceStart,
@@ -29,8 +27,7 @@ export default function VoiceAIButtons({
         type="button"
         variant={isRecording ? "destructive" : "ghost"}
         size="sm"
-        onClick={speechSupported ? (isRecording ? onVoiceStop : onVoiceStart) : undefined}
-        disabled={!speechSupported}
+        onClick={isRecording ? onVoiceStop : onVoiceStart}
         className="gap-1.5"
       >
         {isRecording ? (
